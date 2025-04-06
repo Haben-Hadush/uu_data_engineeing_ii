@@ -1,0 +1,44 @@
+services:
+    spark-master:
+        build:
+           context: .
+           dockerfile: spark-image-dockerfile
+        image: spark-image:v1.0
+        container_name: spark-master
+        hostname: spark-master
+        environment: 
+            - SPARK_MODE=master
+        ports:
+            - "8080:8080"
+            - "7077:7077"
+        volumes:
+            - spark-data:/usr/spark/data
+        networks:
+            - spark-network
+    
+    spark-worker:
+        image: spark-image:v1.0
+        depends_on:
+            - spark-master
+        environment:
+            - SPARK_MODE=worker
+            - SPARK_MASTER_URL=spark://spark-master:7077
+            # can define other compute resource aswell, like cores ...
+        ports:
+            - "8081"
+        
+        volumes:
+            - spark-data:/usr/spark/data
+        networks:
+            - spark-network
+        
+        deploy:
+            replicas: 1
+
+networks:
+  spark-network:
+    driver: bridge
+
+volumes:
+  spark-data:
+    driver: local

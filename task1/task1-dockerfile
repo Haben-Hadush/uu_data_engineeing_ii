@@ -1,0 +1,8 @@
+# escape = \
+FROM ubuntu:22.04
+RUN apt-get --yes update && \ 
+    apt-get --yes upgrade && \
+    apt-get --yes install sl 
+ENV PATH=/usr/games:$PATH
+CMD ["echo","Data Engineering II"]
+    

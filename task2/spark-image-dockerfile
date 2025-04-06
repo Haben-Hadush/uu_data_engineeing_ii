@@ -1,0 +1,43 @@
+# escape=\
+
+# this will be the base image for creating spark node (either worker or master)
+# and configure it in docker compose which is which 
+
+# base image for dev, for production you can use the openjdk base image
+FROM ubuntu:22.04
+
+# define environments
+ENV SPARK_HOME="/usr/local/spark"
+ENV PATH=$PATH:$SPARK_HOME/bin
+ENV SPARK_NO_DAEMONIZE="true"
+# download and install necessary lib for the cluster 
+RUN apt-get --yes update  && \
+    apt-get --yes upgrade && \
+    apt-get --yes autoremove && \
+    apt-get install --yes openjdk-11-jre-headless \
+                          wget \
+                          curl \
+                          vim \
+                          tar \
+                          net-tools \
+                          netcat && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# download and install spark cluster
+
+RUN mkdir -p $SPARK_HOME && \
+    mkdir -p /app && \
+    wget https://dlcdn.apache.org/spark/spark-3.5.5/spark-3.5.5-bin-hadoop3.tgz && \
+    tar -xzf spark-3.5.5-bin-hadoop3.tgz -C $SPARK_HOME --strip-components=1 && \
+    rm -rf spark-3.5.5-bin-hadoop3.tgz
+
+# bootstarp for creating a cluster / app config
+COPY start-cluster.sh /app/
+RUN chmod +x /app/start-cluster.sh
+
+# define spark ports
+EXPOSE 8080 7077 8081
+
+# now this should start the cluster when building the image
+ENTRYPOINT ["/app/start-cluster.sh"]
